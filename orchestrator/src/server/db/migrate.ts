@@ -289,6 +289,26 @@ const migrations = [
   `CREATE INDEX IF NOT EXISTS idx_design_resume_assets_document_id
     ON design_resume_assets(document_id)`,
 
+  `CREATE TABLE IF NOT EXISTS job_documents (
+    id TEXT PRIMARY KEY,
+    tenant_id TEXT NOT NULL DEFAULT 'tenant_default',
+    job_id TEXT NOT NULL,
+    file_name TEXT NOT NULL,
+    media_type TEXT,
+    byte_size INTEGER NOT NULL,
+    storage_path TEXT NOT NULL,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+    FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE,
+    FOREIGN KEY (job_id) REFERENCES jobs(id) ON DELETE CASCADE
+  )`,
+
+  `CREATE INDEX IF NOT EXISTS idx_job_documents_job_id
+    ON job_documents(job_id)`,
+
+  `CREATE INDEX IF NOT EXISTS idx_job_documents_tenant_job_id
+    ON job_documents(tenant_id, job_id)`,
+
   `CREATE TABLE IF NOT EXISTS job_chat_threads (
     id TEXT PRIMARY KEY,
     tenant_id TEXT NOT NULL DEFAULT 'tenant_default',
@@ -300,6 +320,7 @@ const migrations = [
     active_root_message_id TEXT,
     selected_note_ids TEXT NOT NULL DEFAULT '[]',
     selected_email_ids TEXT NOT NULL DEFAULT '[]',
+    selected_document_ids TEXT NOT NULL DEFAULT '[]',
     FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE,
     FOREIGN KEY (job_id) REFERENCES jobs(id) ON DELETE CASCADE
   )`,
@@ -856,6 +877,7 @@ const migrations = [
   `ALTER TABLE job_chat_threads ADD COLUMN active_root_message_id TEXT`,
   `ALTER TABLE job_chat_threads ADD COLUMN selected_note_ids TEXT NOT NULL DEFAULT '[]'`,
   `ALTER TABLE job_chat_threads ADD COLUMN selected_email_ids TEXT NOT NULL DEFAULT '[]'`,
+  `ALTER TABLE job_chat_threads ADD COLUMN selected_document_ids TEXT NOT NULL DEFAULT '[]'`,
   `ALTER TABLE pipeline_runs ADD COLUMN config_snapshot TEXT`,
   `ALTER TABLE analytics_install_state ADD COLUMN raw_event_replay_version INTEGER NOT NULL DEFAULT 0`,
   `ALTER TABLE analytics_install_state ADD COLUMN raw_event_replay_completed_at TEXT`,
@@ -996,6 +1018,7 @@ function ensureTenantColumns(): void {
     "job_chat_runs",
     "design_resume_documents",
     "design_resume_assets",
+    "job_documents",
     "post_application_integrations",
     "post_application_sync_runs",
     "post_application_messages",

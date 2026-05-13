@@ -1,19 +1,19 @@
 import * as api from "@client/api";
-import type { Job } from "@shared/types";
+import type { JobDocument } from "@shared/types";
 import { fileToUploadPayload } from "./file-upload-payload";
 
-export async function uploadJobPdfFromFile(
+export async function uploadJobDocumentFromFile(
   jobId: string,
   file: File,
-): Promise<Job> {
+): Promise<JobDocument> {
   const payload = await fileToUploadPayload(
     file,
-    "PDF file could not be encoded for upload.",
+    "Document could not be encoded for upload.",
   );
 
-  return api.uploadJobPdf(jobId, {
+  return api.uploadJobDocument(jobId, {
     fileName: payload.fileName,
-    mediaType: payload.mediaType ?? undefined,
+    mediaType: payload.mediaType,
     dataBase64: payload.dataBase64,
   });
 }
