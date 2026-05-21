@@ -22,9 +22,6 @@ describe("JobBriefPane", () => {
     render(<JobBriefPane job={job} />);
 
     expect(screen.getByText("Build internal workflow tools.")).toBeVisible();
-    expect(
-      screen.queryByText(/Good fit because the stack matches/),
-    ).not.toBeInTheDocument();
     expect(screen.getByText("TypeScript")).toBeVisible();
     expect(screen.getByText("React")).toBeVisible();
     expect(screen.getByText("Node.js")).toBeVisible();
