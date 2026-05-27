@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/tooltip";
 import { cn, formatDate, formatJobSourceLabel, sourceLabel } from "@/lib/utils";
 import { useSettings } from "../hooks/useSettings";
+import { formatPostingAgeLabel } from "../lib/job-posting-age";
 import { appliedDuplicateIndicator } from "../pages/orchestrator/constants";
 import {
   getJobStatusIndicator,
@@ -163,6 +164,12 @@ const AppliedDuplicatePill: React.FC<{
   );
 };
 
+const postingAgeDotColor = {
+  fresh: "bg-emerald-500",
+  aging: "bg-amber-500",
+  old: "bg-slate-500",
+};
+
 export const JobHeader: React.FC<JobHeaderProps> = ({
   job,
   className,
@@ -179,6 +186,7 @@ export const JobHeader: React.FC<JobHeaderProps> = ({
     ? undefined
     : { jobPageBackTo: `${location.pathname}${location.search}` };
   const deadline = formatDate(job.deadline);
+  const postingAge = formatPostingAgeLabel(job.datePosted);
   const jobStatusTooltip =
     job.status === "discovered" ? (
       <p className="text-xs">Found by the pipeline. Not tailored yet.</p>
@@ -273,6 +281,16 @@ export const JobHeader: React.FC<JobHeaderProps> = ({
               label={
                 sourceLabel[job.source] ?? formatJobSourceLabel(job.source)
               }
+            />
+          )}
+
+          {postingAge && (
+            <StatusIndicator
+              dotColor={postingAgeDotColor[postingAge.tone]}
+              label={postingAge.inlineLabel}
+              tooltip={postingAge.tooltip}
+              tooltipClassName="max-w-xs"
+              className="cursor-help"
             />
           )}
 
