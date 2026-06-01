@@ -1,4 +1,4 @@
-import { badRequest, serviceUnavailable, unauthorized } from "@infra/errors";
+import { badRequest, conflict, serviceUnavailable, unauthorized } from "@infra/errors";
 import { asyncRoute, fail, ok } from "@infra/http";
 import { blacklistToken, signToken, verifyToken } from "@server/auth/jwt";
 import { verifyPassword } from "@server/auth/password";
@@ -127,7 +127,7 @@ authRouter.post(
     }
 
     if ((await usersRepo.countUsers()) > 0) {
-      fail(res, badRequest("Initial setup has already been completed"));
+      fail(res, conflict("Initial setup has already been completed"));
       return;
     }
 
@@ -149,7 +149,7 @@ authRouter.post(
       displayName: parsed.data.displayName ?? parsed.data.username,
     });
     if (!user) {
-      fail(res, badRequest("Initial setup has already been completed"));
+      fail(res, conflict("Initial setup has already been completed"));
       return;
     }
 

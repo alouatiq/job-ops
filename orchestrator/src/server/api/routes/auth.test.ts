@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 import type { Server } from "node:http";
 import { join } from "node:path";
+import { createPrivateWorkspaceUser } from "@server/repositories/users";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { startServer, stopServer } from "./test-utils";
 
@@ -182,6 +183,29 @@ describe.sequential("Auth routes", () => {
         "Password must be at least 8 characters.",
       );
       expect(body.error.details.fieldErrors.password).toBe("[REDACTED]");
+    });
+
+    it("returns a conflict when setup has already been completed", async () => {
+      await createPrivateWorkspaceUser({
+        username: "existing-admin",
+        password: "super-secret-password",
+        displayName: "Existing Admin",
+      });
+
+      const res = await fetch(`${baseUrl}/api/auth/setup`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          username: "admin",
+          password: "super-secret-password",
+        }),
+      });
+
+      expect(res.status).toBe(409);
+      const body = await res.json();
+      expect(body.ok).toBe(false);
+      expect(body.error.code).toBe("CONFLICT");
+      expect(body.error.message).toBe("Initial setup has already been completed");
     });
   });
 

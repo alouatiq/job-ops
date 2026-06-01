@@ -4,8 +4,11 @@ import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import { AppErrorBoundary } from "@/client/components/AppErrorBoundary";
 import { queryClient } from "@/client/lib/queryClient";
+import { initializeAnalyticsRuntime } from "@/client/lib/analytics-bootstrap";
 import { App } from "./App";
 import "../index.css";
+
+initializeAnalyticsRuntime();
 
 const rootElement = document.getElementById("root");
 if (!rootElement) throw new Error("Failed to find the root element");

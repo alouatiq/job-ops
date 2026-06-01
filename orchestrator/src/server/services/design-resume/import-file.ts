@@ -852,14 +852,20 @@ function parseReactiveResumeJsonFile(content: string): DesignResumeJson {
     );
   }
 
-  const validation = safeParseV5ResumeData(candidate);
+  const picture = asRecord(candidate.picture) ?? asRecord(candidate.basics?.picture);
+  const normalizedInput = {
+    ...candidate,
+    picture: picture ?? {},
+  };
+  const normalized = normalizeReactiveResumeV5Document(normalizedInput);
+  const validation = safeParseV5ResumeData(normalized);
   if (!validation.success) {
     throw badRequest(
       `Reactive Resume JSON must be a valid v5 resume document. ${getResumeSchemaValidationMessage(validation.error)}`,
     );
   }
 
-  return validation.data as DesignResumeJson;
+  return normalized as DesignResumeJson;
 }
 
 function buildCapabilityErrorMessage(provider: string): string {

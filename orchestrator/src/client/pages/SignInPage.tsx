@@ -119,9 +119,29 @@ export function SignInPage() {
       }
       navigate(nextPath, { replace: true });
     } catch (error) {
-      setErrorMessage(
-        error instanceof Error ? error.message : "Unable to sign in",
-      );
+      const message = error instanceof Error ? error.message : "Unable to sign in";
+      const setupConflict =
+        setupRequired &&
+        (message.includes("Initial setup has already been completed") ||
+          ((typeof error === "object" &&
+            error !== null &&
+            "status" in error &&
+            (error as { status?: number }).status === 409) ||
+            (typeof error === "object" &&
+              error !== null &&
+              "code" in error &&
+              (error as { code?: string }).code === "CONFLICT")));
+
+      if (setupConflict) {
+        setSetupRequired(false);
+        setErrorMessage(
+          "This instance is already configured. Sign in with your existing account.",
+        );
+        setIsBusy(false);
+        return;
+      }
+
+      setErrorMessage(message);
       setIsBusy(false);
     }
   };

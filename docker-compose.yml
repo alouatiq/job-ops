@@ -9,6 +9,8 @@ services:
       dockerfile: Dockerfile
       secrets:
         - github_token
+      args:
+        SKIP_BROWSER_ASSETS: ${SKIP_BROWSER_ASSETS:-0}
     image: ghcr.io/dakheera47/job-ops:latest
     container_name: job-ops
     ports:

@@ -83,6 +83,51 @@ describe("SignInPage", () => {
     });
   });
 
+  it("switches back to sign-in when setup is already completed", async () => {
+    vi.mocked(getAuthBootstrapStatus).mockResolvedValue({
+      setupRequired: true,
+    });
+    vi.mocked(setupFirstAdmin).mockRejectedValue(
+      Object.assign(new Error("Initial setup has already been completed"), {
+        status: 409,
+        code: "CONFLICT",
+      }),
+    );
+
+    render(
+      <MemoryRouter initialEntries={["/sign-in"]}>
+        <Routes>
+          <Route path="/sign-in" element={<SignInPage />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => {
+      expect(
+        screen.getByText("Create the first system admin for this JobOps instance."),
+      ).toBeInTheDocument();
+    });
+
+    fireEvent.change(screen.getByLabelText("Username"), {
+      target: { value: "admin" },
+    });
+    fireEvent.change(screen.getByLabelText("Password"), {
+      target: { value: "super-secret-password" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Create workspace" }));
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(
+          "This instance is already configured. Sign in with your existing account.",
+        ),
+      ).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Sign in" })).toBeInTheDocument();
+    });
+
+    expect(signInWithCredentials).not.toHaveBeenCalled();
+  });
+
   it("prefills a remembered username but still requires a password", async () => {
     localStorage.setItem(
       "jobops.rememberedAuthUsers",

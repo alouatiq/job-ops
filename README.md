@@ -51,6 +51,14 @@ cd job-ops
 docker compose up -d
 ```
 
+If the Docker build fails while downloading Playwright or Camoufox assets, create a `.env` file with:
+
+```bash
+SKIP_BROWSER_ASSETS=1
+```
+
+Then rerun `docker compose up -d --build`.
+
 Open `http://localhost:3005` and follow the onboarding wizard. You'll be searching in under 10 minutes.
 
 ---

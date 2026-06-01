@@ -1,5 +1,8 @@
 # syntax=docker/dockerfile:1.6
 
+ARG SKIP_BROWSER_ASSETS=0
+ARG CODEX_CLI_VERSION=0.120.0
+
 # ============================================================================
 # SHARED BASE IMAGES
 # ============================================================================
@@ -14,6 +17,7 @@ ENV CODEX_HOME=/app/codex-home
 ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
 ENV PATH=/root/.local/bin:${PATH}
 ARG CODEX_CLI_VERSION=0.120.0
+ARG SKIP_BROWSER_ASSETS=0
 
 # Install runtime dependencies shared by build and production stages.
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -41,15 +45,18 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # BUILD INPUT STAGES
 # ============================================================================
 FROM build-base AS python-deps
+ARG SKIP_BROWSER_ASSETS=0
 
 # Install Python dependencies with pip cache.
+RUN mkdir -p /ms-playwright
 RUN --mount=type=cache,target=/root/.cache/pip \
     pip3 install --break-system-packages playwright python-jobspy
 
-# Install Firefox for Python Playwright.
-RUN python3 -m playwright install firefox
+# Install Firefox for Python Playwright when browser assets are available.
+RUN [ "$SKIP_BROWSER_ASSETS" = "1" ] || python3 -m playwright install firefox
 
 FROM build-base AS node-deps
+ARG SKIP_BROWSER_ASSETS=0
 
 # Copy package files for dependency installation.
 COPY package*.json ./
@@ -74,13 +81,15 @@ COPY extractors/wazzuf/package*.json ./extractors/wazzuf/
 COPY extractors/browser-utils/package*.json ./extractors/browser-utils/
 
 # Install Node dependencies with npm cache (dev deps needed for build).
+RUN mkdir -p /root/.cache/camoufox
 RUN --mount=type=cache,target=/root/.npm \
     npm install --workspaces --include-workspace-root --include=dev \
     --no-audit --no-fund --progress=false
 
 # Fetch Camoufox binaries before copying source to keep the download cached.
 RUN --mount=type=secret,id=github_token,required=false \
-    sh -c 'GITHUB_TOKEN="$([ -f /run/secrets/github_token ] && cat /run/secrets/github_token || true)" node ./scripts/camoufox-fetch.mjs'
+    sh -c 'GITHUB_TOKEN="$([ -f /run/secrets/github_token ] && cat /run/secrets/github_token || true)" \
+    && [ "$SKIP_BROWSER_ASSETS" = "1" ] || node ./scripts/camoufox-fetch.mjs'
 
 FROM node-deps AS build-sources
 

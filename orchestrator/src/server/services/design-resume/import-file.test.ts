@@ -152,6 +152,64 @@ describe("importDesignResumeFromFile", () => {
     );
   });
 
+  it("normalizes legacy Reactive Resume picture exports before validating", async () => {
+    const legacyResumeJson = {
+      basics: {
+        name: "Hassan Al Ouatiq",
+        headline: "Head of Digitalization & Automation",
+        email: "alouatiq@outlook.com",
+        phone: "+33 7 72 46 39 51",
+        location: "Le Havre, France",
+        website: {
+          label: "Website",
+          href: "https://www.alouatiq.com",
+        },
+        customFields: [],
+        picture: {
+          url: "",
+          size: 64,
+          aspectRatio: 1,
+          borderRadius: 0,
+          effects: {
+            hidden: false,
+            border: false,
+            grayscale: false,
+          },
+        },
+      },
+      metadata: {
+        theme: "default",
+      },
+      sections: {},
+    };
+
+    const result = await importDesignResumeFromFile({
+      fileName: "resume.json",
+      mediaType: "application/json",
+      dataBase64: Buffer.from(JSON.stringify(legacyResumeJson), "utf8").toString(
+        "base64",
+      ),
+    });
+
+    expect(result.resumeJson.basics.name).toBe("Hassan Al Ouatiq");
+    expect(result.resumeJson.picture).toEqual(
+      expect.objectContaining({
+        hidden: false,
+        size: 64,
+        aspectRatio: 1,
+        borderRadius: 0,
+      }),
+    );
+    expect(
+      designResumeService.replaceCurrentDesignResumeDocument,
+    ).toHaveBeenCalledWith(
+      expect.objectContaining({
+        sourceMode: "v5",
+        sourceResumeId: null,
+      }),
+    );
+  });
+
   it("rejects non Reactive Resume JSON files", async () => {
     await expect(
       importDesignResumeFromFile({
